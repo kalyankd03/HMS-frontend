@@ -1,35 +1,72 @@
-# HMS Frontend
+# HMS Frontend Monorepo
 
-Hospital Management System Frontend built with Next.js 14, TypeScript, and Tailwind CSS.
+A modern, scalable Hospital Management System frontend built with **Next.js** for web and **React Native** for mobile, sharing maximum code through a well-architected monorepo.
 
-## Quick Start
+## 🏗️ Architecture
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   # or
-   pnpm install
-   ```
+This monorepo uses a **multi-app, shared packages** architecture optimized for:
 
-2. **Environment setup:**
-   ```bash
-   cp env.local.sample .env.local
-   ```
-   
-   Update `.env.local` with your HMS auth-service URL:
-   ```
-   NEXT_PUBLIC_AUTH_URL=http://localhost:3001
-   ```
+- **Maximum code reuse** (70-90%) between web and mobile platforms
+- **Platform optimization** with separate apps for web (Next.js + shadcn/ui) and mobile (React Native)
+- **Type safety** with comprehensive TypeScript integration
+- **Consistent design system** across all platforms
+- **Modern development tooling** with Turborepo, pnpm workspaces, and automated workflows
 
-3. **Start development server:**
-   ```bash
-   npm run dev
-   # or
-   pnpm dev
-   ```
+## 📁 Project Structure
 
-4. **Open browser:**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+```
+HMS-frontend/
+├── apps/
+│   ├── web/                    # Next.js 14 app (SEO-optimized)
+│   └── mobile/                # React Native app
+├── packages/
+│   ├── core/                  # Shared business logic & types
+│   ├── api-client/            # HTTP client & API endpoints
+│   ├── state/                 # State management (Zustand)
+│   ├── design-tokens/         # Universal design system
+│   ├── ui-web/                # shadcn/ui components for web
+│   └── ui-mobile/             # React Native components
+└── tooling/
+    ├── typescript-config/     # Shared TypeScript configs
+    └── eslint-config/         # Shared ESLint configs
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Node.js** >= 18.0.0
+- **pnpm** >= 8.0.0 (recommended package manager)
+- **React Native CLI** (for mobile development)
+
+### Installation
+```bash
+git clone <your-repo-url>
+cd HMS-frontend
+pnpm install
+pnpm build:packages
+```
+
+### Development
+```bash
+# Web development server
+pnpm dev:web
+
+# Mobile development (requires React Native setup)
+pnpm dev:mobile
+
+# All platforms
+pnpm dev
+```
+
+### Environment Setup
+```bash
+# Copy environment template for web app
+cp apps/web/.env.local.example apps/web/.env.local
+
+# Edit with your API endpoints
+# NEXT_PUBLIC_AUTH_URL=http://localhost:3001
+# NEXT_PUBLIC_PATIENT_URL=http://localhost:3002
+```
 
 ## Features
 

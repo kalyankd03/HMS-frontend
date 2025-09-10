@@ -1,0 +1,23 @@
+{
+  "extends": "@hms/typescript-config/react-native.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@hms/core": ["../../packages/core/src"],
+      "@hms/api-client": ["../../packages/api-client/src"],
+      "@hms/state": ["../../packages/state/src"],
+      "@hms/design-tokens": ["../../packages/design-tokens/src"],
+      "@hms/ui-mobile": ["../../packages/ui-mobile/src"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "index.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "android",
+    "ios"
+  ]
+}

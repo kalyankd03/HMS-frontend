@@ -1,0 +1,27 @@
+{
+  "extends": "@hms/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@hms/core": ["../../packages/core/src"],
+      "@hms/api-client": ["../../packages/api-client/src"],
+      "@hms/state": ["../../packages/state/src"],
+      "@hms/design-tokens": ["../../packages/design-tokens/src"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "@hms/design-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "module": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./web": {
+      "types": "./dist/web.d.ts",
+      "import": "./dist/web.mjs",
+      "module": "./dist/web.mjs",
+      "require": "./dist/web.js"
+    },
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "import": "./dist/native.mjs",
+      "module": "./dist/native.mjs",
+      "require": "./dist/native.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/web.ts src/native.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/web.ts src/native.ts --format cjs,esm --dts --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@hms/typescript-config": "workspace:*",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  }
+}
