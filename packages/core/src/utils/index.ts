@@ -89,3 +89,6 @@ export function isApiError(error: unknown): error is { error: { code: string; me
     'message' in (error as any).error
   );
 }
+
+// Export JWT utilities
+export * from './jwt';

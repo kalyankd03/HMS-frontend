@@ -8,6 +8,7 @@
       "@hms/api-client": ["../../packages/api-client/src"],
       "@hms/state": ["../../packages/state/src"],
       "@hms/design-tokens": ["../../packages/design-tokens/src"],
+      "@hms/design-tokens/native": ["../../packages/design-tokens/src/native"],
       "@hms/ui-mobile": ["../../packages/ui-mobile/src"]
     }
   },

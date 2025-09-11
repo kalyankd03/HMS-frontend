@@ -9,17 +9,17 @@ import type {
 import type { HttpClient } from '../client/http-client';
 
 export class DoctorsApi {
-  constructor(private client: HttpClient, private baseUrl: string) {}
+  constructor(private readonly client: HttpClient, private readonly baseUrl: string) {}
 
   async searchDoctors(query: string, token: string, limit = 10): Promise<DoctorSearchResponse> {
     const authenticatedClient = this.client.withAuth(token);
     const params = new URLSearchParams({ q: query, limit: String(limit) });
-    return authenticatedClient.get<DoctorSearchResponse>(`${this.baseUrl}/api/doctors/search?${params.toString()}`);
+    return authenticatedClient.request<DoctorSearchResponse>(`${this.baseUrl}/api/doctors/search?${params.toString()}`);
   }
 
   async getDoctor(doctorId: number, token: string): Promise<DoctorWithUser> {
     const authenticatedClient = this.client.withAuth(token);
-    return authenticatedClient.get<DoctorWithUser>(`/api/doctors/${doctorId}`);
+    return authenticatedClient.request<DoctorWithUser>(`/api/doctors/${doctorId}`);
   }
 
   async getAllDoctors(token: string, options?: {
@@ -35,24 +35,24 @@ export class DoctorsApi {
     if (options?.speciality) params.append('speciality', options.speciality);
     
     const queryString = params.toString();
-    const url = `/api/doctors${queryString ? `?${queryString}` : ''}`;
+    const url = queryString ? `/api/doctors?${queryString}` : '/api/doctors';
     
-    return authenticatedClient.get<{ doctors: DoctorWithUser[] }>(url);
+    return authenticatedClient.request<{ doctors: DoctorWithUser[] }>(url);
   }
 
   async createDoctor(doctorData: CreateDoctorForm, token: string): Promise<Doctor> {
     const authenticatedClient = this.client.withAuth(token);
-    return authenticatedClient.post<Doctor>('/api/doctors', doctorData);
+    return authenticatedClient.request<Doctor>('/api/doctors', { method: 'POST', data: doctorData });
   }
 
   async updateDoctor(doctorId: number, updates: UpdateDoctorForm, token: string): Promise<Doctor> {
     const authenticatedClient = this.client.withAuth(token);
-    return authenticatedClient.put<Doctor>(`/api/doctors/${doctorId}`, updates);
+    return authenticatedClient.request<Doctor>(`/api/doctors/${doctorId}`, { method: 'PUT', data: updates });
   }
 
   async deactivateDoctor(doctorId: number, token: string): Promise<{ message: string; doctor: Doctor }> {
     const authenticatedClient = this.client.withAuth(token);
-    return authenticatedClient.delete<{ message: string; doctor: Doctor }>(`/api/doctors/${doctorId}`);
+    return authenticatedClient.request<{ message: string; doctor: Doctor }>(`/api/doctors/${doctorId}`, { method: 'DELETE' });
   }
 
   async getDepartments(token: string, hospitalId?: number): Promise<{ departments: Department[] }> {
@@ -62,9 +62,9 @@ export class DoctorsApi {
     if (hospitalId) params.append('hospital_id', hospitalId.toString());
     
     const queryString = params.toString();
-    const url = `/api/doctors/meta/departments${queryString ? `?${queryString}` : ''}`;
+    const url = queryString ? `/api/doctors/meta/departments?${queryString}` : '/api/doctors/meta/departments';
     
-    return authenticatedClient.get<{ departments: Department[] }>(url);
+    return authenticatedClient.request<{ departments: Department[] }>(url);
   }
 
   async getSpecialities(token: string, options?: {
@@ -78,14 +78,14 @@ export class DoctorsApi {
     if (options?.dept) params.append('dept', options.dept);
     
     const queryString = params.toString();
-    const url = `/api/doctors/meta/specialities${queryString ? `?${queryString}` : ''}`;
+    const url = queryString ? `/api/doctors/meta/specialities?${queryString}` : '/api/doctors/meta/specialities';
     
-    return authenticatedClient.get<{ specialities: string[] }>(url);
+    return authenticatedClient.request<{ specialities: string[] }>(url);
   }
 
   async indexDoctors(token: string): Promise<{ message: string }> {
     const authenticatedClient = this.client.withAuth(token);
-    return authenticatedClient.post<{ message: string }>(`${this.baseUrl}/api/doctors/index`);
+    return authenticatedClient.request<{ message: string }>(`${this.baseUrl}/api/doctors/index`, { method: 'POST' });
   }
 }
 

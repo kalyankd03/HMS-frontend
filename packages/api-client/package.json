@@ -20,7 +20,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@hms/core": "workspace:*"
+    "@hms/core": "workspace:*",
+    "axios": "^1.11.0"
   },
   "devDependencies": {
     "@hms/typescript-config": "workspace:*",

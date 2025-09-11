@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { theme } from '@hms/design-tokens/native';
+import { theme, semanticColors, semanticSpacing, componentShadows } from '@hms/design-tokens/native';
 
 export interface CardProps {
   children?: React.ReactNode;
@@ -86,9 +86,9 @@ export const CardFooter: React.FC<CardFooterProps> = ({ children, style }) => (
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.semantic.background,
+    backgroundColor: semanticColors.background,
     borderRadius: theme.borders.radius.lg,
-    ...theme.shadows.component.card,
+    ...componentShadows.card,
   },
   
   // Variants
@@ -98,26 +98,26 @@ const styles = StyleSheet.create({
   
   outlined: {
     borderWidth: theme.borders.width.thin,
-    borderColor: theme.colors.semantic.border,
+    borderColor: semanticColors.border,
     shadowOpacity: 0, // Remove shadow for outlined variant
     elevation: 0,
   },
   
   elevated: {
-    ...theme.shadows.component.cardHover,
+    ...componentShadows.cardHover,
   },
   
   // Sizes
   sm: {
-    padding: theme.spacing.semantic.cardPadding.sm,
+    padding: semanticSpacing.cardPadding.sm,
   },
   
   md: {
-    padding: theme.spacing.semantic.cardPadding.md,
+    padding: semanticSpacing.cardPadding.md,
   },
   
   lg: {
-    padding: theme.spacing.semantic.cardPadding.lg,
+    padding: semanticSpacing.cardPadding.lg,
   },
   
   // Card sections
@@ -128,13 +128,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.typography.textStyles.h4.fontSize,
     fontWeight: theme.typography.textStyles.h4.fontWeight,
-    color: theme.colors.semantic.text,
+    color: semanticColors.text,
     marginBottom: theme.spacing[2],
   },
   
   description: {
     fontSize: theme.typography.textStyles.bodySmall.fontSize,
-    color: theme.colors.semantic.textMuted,
+    color: semanticColors.textMuted,
     lineHeight: theme.typography.textStyles.bodySmall.lineHeight * theme.typography.textStyles.bodySmall.fontSize,
   },
   

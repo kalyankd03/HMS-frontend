@@ -1,3 +1,6 @@
+> [!IMPORTANT] Deprecated
+> Migration guidance is now consolidated into `agents.md` (structure, rules) and `CLAUDE.md` (commands/playbooks).
+
 # React Native Web Migration Guide
 
 This guide explains how to migrate your existing HMS Frontend components to use React Native Web for maximum code reuse between web and mobile platforms.

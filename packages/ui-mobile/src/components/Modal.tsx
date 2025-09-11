@@ -11,7 +11,7 @@ import {
   Dimensions,
   SafeAreaView,
 } from 'react-native';
-import { theme } from '@hms/design-tokens/native';
+import { theme, semanticColors, semanticSpacing, componentShadows } from '@hms/design-tokens/native';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -124,31 +124,31 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.semantic.componentPadding.md,
+    padding: semanticSpacing.componentPadding.md,
   },
   
   content: {
-    backgroundColor: theme.colors.semantic.background,
+    backgroundColor: semanticColors.background,
     borderRadius: theme.borders.radius.xl,
     maxHeight: screenHeight * 0.9,
     width: '100%',
-    ...theme.shadows.component.modal,
+    ...componentShadows.modal,
   },
   
   // Sizes
   sm: {
     maxWidth: 320,
-    padding: theme.spacing.semantic.componentPadding.sm,
+    padding: semanticSpacing.componentPadding.sm,
   },
   
   md: {
     maxWidth: 480,
-    padding: theme.spacing.semantic.componentPadding.md,
+    padding: semanticSpacing.componentPadding.md,
   },
   
   lg: {
     maxWidth: 640,
-    padding: theme.spacing.semantic.componentPadding.lg,
+    padding: semanticSpacing.componentPadding.lg,
   },
   
   full: {
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     maxHeight: '100%',
     margin: 0,
     borderRadius: 0,
-    padding: theme.spacing.semantic.componentPadding.md,
+    padding: semanticSpacing.componentPadding.md,
   },
   
   header: {
@@ -166,13 +166,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing[4],
     paddingBottom: theme.spacing[3],
     borderBottomWidth: theme.borders.width.thin,
-    borderBottomColor: theme.colors.semantic.border,
+    borderBottomColor: semanticColors.border,
   },
   
   title: {
     fontSize: theme.typography.textStyles.h3.fontSize,
     fontWeight: theme.typography.textStyles.h3.fontWeight,
-    color: theme.colors.semantic.text,
+    color: semanticColors.text,
     flex: 1,
   },
   
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   
   closeButtonText: {
     fontSize: 24,
-    color: theme.colors.semantic.textMuted,
+    color: semanticColors.textMuted,
     fontWeight: theme.typography.fontWeight.normal,
   },
   
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing[4],
     paddingBottom: theme.spacing[3],
     borderBottomWidth: theme.borders.width.thin,
-    borderBottomColor: theme.colors.semantic.border,
+    borderBottomColor: semanticColors.border,
   },
   
   modalBody: {
@@ -211,6 +211,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing[3],
     paddingTop: theme.spacing[3],
     borderTopWidth: theme.borders.width.thin,
-    borderTopColor: theme.colors.semantic.border,
+    borderTopColor: semanticColors.border,
   },
 });

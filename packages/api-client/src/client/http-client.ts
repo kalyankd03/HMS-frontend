@@ -1,4 +1,14 @@
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { API_CONFIG, isApiError, getErrorMessage } from '@hms/core';
+
+// Extend AxiosRequestConfig to include metadata
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    metadata?: {
+      requestId: string;
+    };
+  }
+}
 
 export interface ApiClientConfig {
   baseUrl: string;
@@ -8,8 +18,8 @@ export interface ApiClientConfig {
 
 export interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  data?: unknown;
   headers?: Record<string, string>;
-  body?: unknown;
   timeout?: number;
 }
 
@@ -19,91 +29,79 @@ function generateRequestId(): string {
 }
 
 export class HttpClient {
-  private config: Required<ApiClientConfig>;
+  private readonly axiosInstance: AxiosInstance;
 
   constructor(config: ApiClientConfig) {
-    this.config = {
-      timeout: API_CONFIG.TIMEOUT,
-      defaultHeaders: {
-        'Content-Type': 'application/json',
-      },
-      ...config,
-    };
-  }
-
-  private async makeRequest<T>(
-    endpoint: string,
-    options: ApiRequestOptions = {}
-  ): Promise<T> {
-    const requestId = generateRequestId();
-    const url = `${this.config.baseUrl}${endpoint}`;
-    
-    const requestConfig: RequestInit = {
-      method: options.method || 'GET',
+    this.axiosInstance = axios.create({
+      baseURL: config.baseUrl,
+      timeout: config.timeout || API_CONFIG.TIMEOUT,
       headers: {
-        ...this.config.defaultHeaders,
-        ...options.headers,
+        'Content-Type': 'application/json',
+        ...config.defaultHeaders,
       },
-      signal: AbortSignal.timeout(options.timeout || this.config.timeout),
+    });
+
+    // Add request interceptor for logging
+    this.axiosInstance.interceptors.request.use((config) => {
+      const requestId = generateRequestId();
+      config.metadata = { requestId };
+      console.info(`[${requestId}] ${config.method?.toUpperCase()} ${config.url}`);
+      return config;
+    });
+
+    // Add response interceptor for error handling and logging
+    this.axiosInstance.interceptors.response.use(
+      (response: AxiosResponse) => {
+        const requestId = response.config.metadata?.requestId;
+        console.info(`[${requestId}] Success`);
+        return response;
+      },
+      (error: AxiosError) => {
+        const requestId = error.config?.metadata?.requestId;
+        
+        if (error.response?.data && isApiError(error.response.data)) {
+          const apiError = error.response.data;
+          console.warn(`[${requestId}] API Error: ${apiError.error.code} - ${apiError.error.message}`);
+          throw new Error(apiError.error.message);
+        }
+        
+        if (error.response) {
+          console.error(`[${requestId}] HTTP Error: ${error.response.status} ${error.response.statusText}`);
+          throw new Error(error.response.statusText || 'Request failed');
+        }
+        
+        const message = getErrorMessage(error);
+        console.error(`[${requestId}] Request failed:`, message);
+        throw new Error(message);
+      }
+    );
+  }
+
+  async request<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
+    const config: AxiosRequestConfig = {
+      url: endpoint,
+      method: options.method || 'GET',
+      data: options.data,
+      headers: options.headers,
+      timeout: options.timeout,
     };
 
-    if (options.body && requestConfig.method !== 'GET') {
-      requestConfig.body = JSON.stringify(options.body);
-    }
-
-    try {
-      console.info(`[${requestId}] ${requestConfig.method} ${endpoint}`);
-      
-      const response = await fetch(url, requestConfig);
-      const data: unknown = await response.json();
-
-      if (!response.ok) {
-        if (isApiError(data)) {
-          console.warn(`[${requestId}] API Error: ${data.error.code} - ${data.error.message}`);
-          throw new Error(data.error.message);
-        }
-        console.error(`[${requestId}] HTTP Error: ${response.status} ${response.statusText}`);
-        throw new Error(response.statusText || 'Request failed');
-      }
-
-      console.info(`[${requestId}] Success`);
-      return data as T;
-    } catch (error) {
-      const message = getErrorMessage(error);
-      console.error(`[${requestId}] Request failed:`, message);
-      throw new Error(message);
-    }
-  }
-
-  async get<T>(endpoint: string, options?: Omit<ApiRequestOptions, 'method' | 'body'>): Promise<T> {
-    return this.makeRequest<T>(endpoint, { ...options, method: 'GET' });
-  }
-
-  async post<T>(endpoint: string, body?: unknown, options?: Omit<ApiRequestOptions, 'method'>): Promise<T> {
-    return this.makeRequest<T>(endpoint, { ...options, method: 'POST', body });
-  }
-
-  async put<T>(endpoint: string, body?: unknown, options?: Omit<ApiRequestOptions, 'method'>): Promise<T> {
-    return this.makeRequest<T>(endpoint, { ...options, method: 'PUT', body });
-  }
-
-  async delete<T>(endpoint: string, options?: Omit<ApiRequestOptions, 'method' | 'body'>): Promise<T> {
-    return this.makeRequest<T>(endpoint, { ...options, method: 'DELETE' });
-  }
-
-  async patch<T>(endpoint: string, body?: unknown, options?: Omit<ApiRequestOptions, 'method'>): Promise<T> {
-    return this.makeRequest<T>(endpoint, { ...options, method: 'PATCH', body });
+    const response = await this.axiosInstance.request<T>(config);
+    return response.data;
   }
 
   // Create authenticated client
   withAuth(token: string): HttpClient {
-    return new HttpClient({
-      ...this.config,
+    const currentHeaders = this.axiosInstance.defaults.headers.common as Record<string, string>;
+    const newClient = new HttpClient({
+      baseUrl: this.axiosInstance.defaults.baseURL || '',
+      timeout: this.axiosInstance.defaults.timeout,
       defaultHeaders: {
-        ...this.config.defaultHeaders,
+        ...currentHeaders,
         Authorization: `Bearer ${token}`,
       },
     });
+    return newClient;
   }
 }
 

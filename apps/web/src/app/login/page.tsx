@@ -2,6 +2,22 @@ import type { Metadata } from 'next';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from 'next/link';
+import { Suspense } from 'react';
+
+function LoginMessage() {
+  if (typeof window === 'undefined') return null;
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const message = urlParams.get('message');
+  
+  if (!message) return null;
+  
+  return (
+    <div className="mb-4 p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+      {message}
+    </div>
+  );
+}
 
 export const metadata: Metadata = {
   title: 'Login',
@@ -20,6 +36,9 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <Suspense fallback={null}>
+              <LoginMessage />
+            </Suspense>
             <LoginForm />
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">

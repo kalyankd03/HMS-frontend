@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { theme } from '@hms/design-tokens/native';
+import { theme, semanticColors } from '@hms/design-tokens/native';
 
 export interface BadgeProps {
   children: React.ReactNode;
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   
   // Variants
   default: {
-    backgroundColor: theme.colors.semantic.primary,
+    backgroundColor: semanticColors.primary,
   },
   
   secondary: {
@@ -85,12 +85,12 @@ const styles = StyleSheet.create({
   outline: {
     backgroundColor: 'transparent',
     borderWidth: theme.borders.width.thin,
-    borderColor: theme.colors.semantic.border,
+    borderColor: semanticColors.border,
   },
   
   // Text colors for variants
   defaultText: {
-    color: theme.colors.semantic.background,
+    color: semanticColors.background,
   },
   
   secondaryText: {
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   
   outlineText: {
-    color: theme.colors.semantic.text,
+    color: semanticColors.text,
   },
   
   // Sizes

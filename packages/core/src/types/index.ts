@@ -9,6 +9,16 @@ export interface User {
   updated_at: string;  // ISO 8601
 }
 
+// User profile from /auth/me endpoint
+export interface UserProfile {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role_id: number;
+  hospital_id: number;
+}
+
 export interface Role {
   role_id: number;
   name: 'admin' | 'doctor' | 'frontdesk' | 'labtech' | 'pharmacist';

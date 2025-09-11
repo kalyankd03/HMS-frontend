@@ -33,7 +33,7 @@ export function LoginScreen({ navigation }: Props) {
       console.log('Login data:', data);
       
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise<void>((resolve) => setTimeout(resolve, 1000));
       
       // Navigate to dashboard on success
       navigation.navigate('Dashboard');

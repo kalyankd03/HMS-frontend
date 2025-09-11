@@ -112,6 +112,26 @@
     background-color: rgb(254 226 226);
     color: rgb(153 27 27);
   }
+  
+  /* Ensure header has solid background */
+  .header-fixed {
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    z-index: 9999 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+  
+  .header-fixed * {
+    background-color: transparent;
+  }
+  
+  .header-fixed > div {
+    background-color: #ffffff !important;
+  }
 }
 
 @layer base {

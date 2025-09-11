@@ -8,7 +8,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { theme } from '@hms/design-tokens/native';
+import { theme, semanticColors, semanticSpacing } from '@hms/design-tokens/native';
 
 export interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -63,7 +63,7 @@ export const Input: React.FC<InputProps> = ({
           error ? styles.error : null,
           inputStyle,
         ]}
-        placeholderTextColor={theme.colors.semantic.textMuted}
+        placeholderTextColor={semanticColors.textMuted}
         onFocus={handleFocus}
         onBlur={handleBlur}
         {...props}
@@ -89,35 +89,35 @@ const styles = StyleSheet.create({
   label: {
     fontSize: theme.typography.textStyles.label.fontSize,
     fontWeight: theme.typography.textStyles.label.fontWeight,
-    color: theme.colors.semantic.text,
+    color: semanticColors.text,
     marginBottom: theme.spacing[2],
   },
   
   input: {
-    backgroundColor: theme.colors.semantic.background,
+    backgroundColor: semanticColors.background,
     borderRadius: theme.borders.radius.md,
-    color: theme.colors.semantic.text,
+    color: semanticColors.text,
     fontSize: theme.typography.textStyles.input.fontSize,
-    paddingHorizontal: theme.spacing.semantic.componentPadding.md,
-    minHeight: theme.spacing.semantic.touchTarget.minimum,
+    paddingHorizontal: semanticSpacing.componentPadding.md,
+    minHeight: semanticSpacing.touchTarget.minimum,
     textAlignVertical: 'center',
   },
   
   // Variants
   default: {
     borderWidth: theme.borders.width.thin,
-    borderColor: theme.colors.semantic.border,
+    borderColor: semanticColors.border,
   },
   
   filled: {
-    backgroundColor: theme.colors.semantic.surface,
+    backgroundColor: semanticColors.surface,
     borderWidth: 0,
   },
   
   outline: {
     backgroundColor: 'transparent',
     borderWidth: theme.borders.width.medium,
-    borderColor: theme.colors.semantic.border,
+    borderColor: semanticColors.border,
   },
   
   // Sizes
@@ -140,22 +140,22 @@ const styles = StyleSheet.create({
   
   // States
   focused: {
-    borderColor: theme.colors.semantic.borderFocus,
+    borderColor: semanticColors.borderFocus,
     borderWidth: theme.borders.width.medium,
   },
   
   error: {
-    borderColor: theme.colors.semantic.error,
+    borderColor: semanticColors.error,
   },
   
   helper: {
     fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.semantic.textMuted,
+    color: semanticColors.textMuted,
     marginTop: theme.spacing[1],
     paddingHorizontal: theme.spacing[1],
   },
   
   errorText: {
-    color: theme.colors.semantic.error,
+    color: semanticColors.error,
   },
 });

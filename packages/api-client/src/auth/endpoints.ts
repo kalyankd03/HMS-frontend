@@ -9,26 +9,26 @@ import type {
 import type { HttpClient } from '../client/http-client';
 
 export class AuthApi {
-  constructor(private client: HttpClient) {}
+  constructor(private readonly client: HttpClient) {}
 
   async login(credentials: LoginForm): Promise<LoginResponse> {
-    return this.client.post<LoginResponse>('/api/auth/login', credentials);
+    return this.client.request<LoginResponse>('/api/auth/login', { method: 'POST', data: credentials });
   }
 
   async register(userData: RegisterForm): Promise<RegisterResponse> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { confirmPassword, ...apiData } = userData;
-    return this.client.post<RegisterResponse>('/api/auth/register', apiData);
+    return this.client.request<RegisterResponse>('/api/auth/register', { method: 'POST', data: apiData });
   }
 
   async getProfile(token: string): Promise<User> {
     const authenticatedClient = this.client.withAuth(token);
-    return authenticatedClient.get<User>('/api/auth/me');
+    return authenticatedClient.request<User>('/api/auth/me');
   }
 
   async getHospital(hospitalId: number, token: string): Promise<Hospital> {
     const authenticatedClient = this.client.withAuth(token);
-    return authenticatedClient.get<Hospital>(`/api/hospitals/${hospitalId}`);
+    return authenticatedClient.request<Hospital>(`/api/hospitals/${hospitalId}`);
   }
 }
 

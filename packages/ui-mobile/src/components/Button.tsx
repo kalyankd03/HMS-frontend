@@ -8,7 +8,7 @@ import {
   TextStyle,
   TouchableOpacityProps,
 } from 'react-native';
-import { theme } from '@hms/design-tokens/native';
+import { theme, semanticColors, semanticSpacing, componentShadows } from '@hms/design-tokens/native';
 
 export interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   title: string;
@@ -53,7 +53,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? theme.colors.semantic.background : theme.colors.semantic.primary}
+          color={variant === 'primary' ? semanticColors.background : semanticColors.primary}
         />
       ) : (
         <Text
@@ -76,25 +76,25 @@ const styles = StyleSheet.create({
     borderRadius: theme.borders.radius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: theme.spacing.semantic.touchTarget.minimum,
+    minHeight: semanticSpacing.touchTarget.minimum,
   },
   
   // Variants
   primary: {
-    backgroundColor: theme.colors.semantic.primary,
-    ...theme.shadows.component.button,
+    backgroundColor: semanticColors.primary,
+    ...componentShadows.button,
   },
   
   secondary: {
-    backgroundColor: theme.colors.semantic.surface,
+    backgroundColor: semanticColors.surface,
     borderWidth: theme.borders.width.thin,
-    borderColor: theme.colors.semantic.border,
+    borderColor: semanticColors.border,
   },
   
   outline: {
     backgroundColor: 'transparent',
     borderWidth: theme.borders.width.thin,
-    borderColor: theme.colors.semantic.primary,
+    borderColor: semanticColors.primary,
   },
   
   ghost: {
@@ -102,25 +102,25 @@ const styles = StyleSheet.create({
   },
   
   destructive: {
-    backgroundColor: theme.colors.semantic.error,
-    ...theme.shadows.component.button,
+    backgroundColor: semanticColors.error,
+    ...componentShadows.button,
   },
   
   // Sizes
   sm: {
-    paddingHorizontal: theme.spacing.semantic.buttonPadding.sm.horizontal,
-    paddingVertical: theme.spacing.semantic.buttonPadding.sm.vertical,
+    paddingHorizontal: semanticSpacing.buttonPadding.sm.horizontal,
+    paddingVertical: semanticSpacing.buttonPadding.sm.vertical,
     minHeight: theme.spacing[10],
   },
   
   md: {
-    paddingHorizontal: theme.spacing.semantic.buttonPadding.md.horizontal,
-    paddingVertical: theme.spacing.semantic.buttonPadding.md.vertical,
+    paddingHorizontal: semanticSpacing.buttonPadding.md.horizontal,
+    paddingVertical: semanticSpacing.buttonPadding.md.vertical,
   },
   
   lg: {
-    paddingHorizontal: theme.spacing.semantic.buttonPadding.lg.horizontal,
-    paddingVertical: theme.spacing.semantic.buttonPadding.lg.vertical,
+    paddingHorizontal: semanticSpacing.buttonPadding.lg.horizontal,
+    paddingVertical: semanticSpacing.buttonPadding.lg.vertical,
     minHeight: theme.spacing[12],
   },
   
@@ -131,27 +131,27 @@ const styles = StyleSheet.create({
   },
   
   primaryText: {
-    color: theme.colors.semantic.background,
+    color: semanticColors.background,
     fontSize: theme.typography.textStyles.button.fontSize,
   },
   
   secondaryText: {
-    color: theme.colors.semantic.text,
+    color: semanticColors.text,
     fontSize: theme.typography.textStyles.button.fontSize,
   },
   
   outlineText: {
-    color: theme.colors.semantic.primary,
+    color: semanticColors.primary,
     fontSize: theme.typography.textStyles.button.fontSize,
   },
   
   ghostText: {
-    color: theme.colors.semantic.text,
+    color: semanticColors.text,
     fontSize: theme.typography.textStyles.button.fontSize,
   },
   
   destructiveText: {
-    color: theme.colors.semantic.background,
+    color: semanticColors.background,
     fontSize: theme.typography.textStyles.button.fontSize,
   },
   
