@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createPatientSchema, getToken } from '@hms/core';
+import { createPatientSchema, getStoredToken } from '@hms/core';
 import type { CreatePatientForm as CreatePatientFormData } from '@hms/core';
 import { patientsApi } from '@/lib/api';
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, UserPlus, CheckCircle } from 'lucide-react';
 
 interface CreatePatientFormProps {
-  readonly onSuccess?: (patient: any) => void;
+  readonly onSuccess?: (patient: unknown) => void;
   readonly onCancel?: () => void;
 }
 
@@ -35,7 +35,6 @@ export function CreatePatientForm({ onSuccess, onCancel }: CreatePatientFormProp
       name: '',
       date_of_birth: '',
       phone: '',
-      hospital_id: undefined,
     },
   });
 
@@ -45,7 +44,7 @@ export function CreatePatientForm({ onSuccess, onCancel }: CreatePatientFormProp
     setSuccessMessage(null);
     
     try {
-      const token = getToken();
+      const token = getStoredToken();
       if (!token) {
         throw new Error('Authentication token not found. Please log in again.');
       }
@@ -164,24 +163,6 @@ export function CreatePatientForm({ onSuccess, onCancel }: CreatePatientFormProp
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="hospital_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Hospital ID</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter hospital ID (optional)"
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <div className="flex items-center space-x-2 pt-4">
               <Button

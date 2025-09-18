@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Users, 
   UserCheck, 
@@ -55,7 +55,7 @@ const navigation = [
   },
 ];
 
-export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ open, collapsed, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -78,16 +78,16 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                  "flex items-center text-sm font-medium rounded-lg transition-colors",
                   "hover:bg-gray-100 hover:text-gray-900",
                   isActive
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "text-gray-600",
-                  collapsed ? "justify-center" : "justify-start"
+                  collapsed ? "justify-center px-2 py-3" : "justify-start px-3 py-2"
                 )}
                 title={collapsed ? item.name : undefined}
               >
-                <Icon className={cn("h-5 w-5", collapsed ? "" : "mr-3")} />
+                <Icon className={cn(collapsed ? "h-6 w-6" : "h-5 w-5 mr-3")} />
                 {!collapsed && (
                   <span className="truncate">{item.name}</span>
                 )}

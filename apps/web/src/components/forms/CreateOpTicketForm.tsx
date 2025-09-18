@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createOpTicketSchema, getToken } from '@hms/core';
+import { createOpTicketSchema, getStoredToken } from '@hms/core';
 import type { CreateOpTicketForm as CreateOpTicketFormData, Patient, DoctorWithUser } from '@hms/core';
 import { patientsApi } from '@/lib/api';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Form, 
   FormControl, 
@@ -23,7 +22,7 @@ import { PatientSearch } from './PatientSearch';
 import { DoctorSearch } from './DoctorSearch';
 
 interface CreateOpTicketFormProps {
-  readonly onSuccess?: (opTicket: any) => void;
+  readonly onSuccess?: (opTicket: unknown) => void;
   readonly onCancel?: () => void;
 }
 
@@ -38,8 +37,7 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
     resolver: zodResolver(createOpTicketSchema),
     defaultValues: {
       patient_id: undefined,
-      patient_query: '',
-      allotted_doctor_id: 0,
+      allotted_doctor_id: undefined,
       referral_doctor: '',
     },
   });
@@ -50,31 +48,15 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
     setSuccessMessage(null);
     
     try {
-      const token = getToken();
+      const token = getStoredToken();
       if (!token) {
         throw new Error('Authentication token not found. Please log in again.');
       }
 
-      // Prepare the data - use selected patient ID if available, otherwise use patient_query
-      const submitData: CreateOpTicketFormData = {
-        ...data,
-        patient_id: selectedPatient?.patient_id,
-        allotted_doctor_id: selectedDoctor?.id || 0,
-      };
-
-      // Validate that we have either patient_id or patient_query
-      if (!submitData.patient_id && !submitData.patient_query?.trim()) {
-        throw new Error('Please select a patient or enter patient information');
-      }
-
-      if (!submitData.allotted_doctor_id) {
-        throw new Error('Please select a doctor');
-      }
-
-      console.log('Creating OP ticket with data:', submitData);
+      console.log('Creating OP ticket with data:', data);
       
       // Call the createOpTicket API
-      const opTicket = await patientsApi.createOpTicket(submitData, token);
+      const opTicket = await patientsApi.createOpTicket(data, token);
       
       console.log('OP ticket created successfully:', opTicket);
       
@@ -112,8 +94,6 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
 
   const handlePatientSelect = (patient: Patient) => {
     setSelectedPatient(patient);
-    // Clear patient_query when a patient is selected
-    form.setValue('patient_query', '');
     form.setValue('patient_id', patient.patient_id);
   };
 
@@ -151,49 +131,48 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
             )}
 
             {/* Patient Selection */}
-            <div className="space-y-3">
-              <FormLabel>Patient Selection *</FormLabel>
-              <PatientSearch
-                onPatientSelect={handlePatientSelect}
-                selectedPatient={selectedPatient}
-                placeholder="Search for existing patient..."
-              />
-              
-              {!selectedPatient && (
-                <div>
-                  <FormLabel className="text-sm text-gray-600">Or enter patient information manually:</FormLabel>
-                  <FormField
-                    control={form.control}
-                    name="patient_query"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter patient name and details (if patient not found in search)"
-                            className="mt-2"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+            <FormField
+              control={form.control}
+              name="patient_id"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Patient Selection *</FormLabel>
+                  <FormControl>
+                    <PatientSearch
+                      onPatientSelect={handlePatientSelect}
+                      selectedPatient={selectedPatient}
+                      placeholder="Search and select a patient..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {!selectedPatient && (
+                    <p className="text-sm text-gray-500">Please search and select a patient from the list above</p>
+                  )}
+                </FormItem>
               )}
-            </div>
+            />
 
             {/* Doctor Selection */}
-            <div className="space-y-3">
-              <FormLabel>Assign Doctor *</FormLabel>
-              <DoctorSearch
-                onDoctorSelect={handleDoctorSelect}
-                selectedDoctor={selectedDoctor}
-                placeholder="Search and select a doctor..."
-              />
-              {!selectedDoctor && (
-                <p className="text-sm text-gray-500">Please search and select a doctor from the list above</p>
+            <FormField
+              control={form.control}
+              name="allotted_doctor_id"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Assign Doctor *</FormLabel>
+                  <FormControl>
+                    <DoctorSearch
+                      onDoctorSelect={handleDoctorSelect}
+                      selectedDoctor={selectedDoctor}
+                      placeholder="Search and select a doctor..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {!selectedDoctor && (
+                    <p className="text-sm text-gray-500">Please search and select a doctor from the list above</p>
+                  )}
+                </FormItem>
               )}
-            </div>
+            />
 
             {/* Referral Doctor */}
             <FormField

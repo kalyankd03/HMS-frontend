@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getToken } from '@hms/core';
-import type { DoctorWithUser } from '@hms/core';
-import { doctorsApi } from '@/lib/api';
+import { getStoredToken } from '@hms/core';
+import type { DoctorWithUser, DoctorSearchResult } from '@hms/core';
+import { patientsApi } from '@/lib/api';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,15 +17,16 @@ interface DoctorSearchProps {
 
 export function DoctorSearch({ onDoctorSelect, selectedDoctor, placeholder = "Search for a doctor..." }: DoctorSearchProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<DoctorWithUser[]>([]);
+  const [results, setResults] = useState<DoctorSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
 
   const searchDoctors = async (searchQuery: string) => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
+    if (!searchQuery.trim() || searchQuery.length < 3) {
       setResults([]);
       setShowResults(false);
+      setError(null);
       return;
     }
 
@@ -33,37 +34,58 @@ export function DoctorSearch({ onDoctorSelect, selectedDoctor, placeholder = "Se
     setError(null);
     
     try {
-      const token = getToken();
+      const token = getStoredToken();
       if (!token) {
         throw new Error('Authentication token not found');
       }
 
-      const response = await doctorsApi.searchDoctors(searchQuery, token, 10);
-      setResults(response.results);
+      const response = await patientsApi.searchDoctors(searchQuery, token, 10);
+      setResults(response.results || []);
       setShowResults(true);
     } catch (error) {
       console.error('Error searching doctors:', error);
       setError(error instanceof Error ? error.message : 'Failed to search doctors');
       setResults([]);
+      setShowResults(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Debounced search
+  // Debounced search - only search if no doctor is selected or query doesn't match selected doctor
   useEffect(() => {
+    if (selectedDoctor && query === selectedDoctor.name) {
+      return; // Don't search if we're showing the selected doctor name
+    }
+    
     const timeoutId = setTimeout(() => {
       searchDoctors(query);
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [query]);
+  }, [query, selectedDoctor]);
 
-  const handleDoctorSelect = (doctor: DoctorWithUser) => {
-    onDoctorSelect(doctor);
+  const handleDoctorSelect = (doctor: DoctorSearchResult) => {
+    // Convert DoctorSearchResult to DoctorWithUser format
+    const doctorWithUser: DoctorWithUser = {
+      id: doctor.id,
+      dept: doctor.dept,
+      speciality: doctor.speciality,
+      is_active: doctor.is_active,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      name: doctor.name,
+      email: doctor.email,
+      hospital_id: doctor.hospital_id,
+      user_created_at: new Date().toISOString(),
+      user_updated_at: new Date().toISOString(),
+    };
+    
+    onDoctorSelect(doctorWithUser);
     setQuery(doctor.name);
     setShowResults(false);
     setResults([]);
+    setError(null);
   };
 
   return (
@@ -75,6 +97,11 @@ export function DoctorSearch({ onDoctorSelect, selectedDoctor, placeholder = "Se
           placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => {
+            if (results.length > 0) {
+              setShowResults(true);
+            }
+          }}
           className="pl-10"
         />
         {isLoading && (
@@ -143,10 +170,10 @@ export function DoctorSearch({ onDoctorSelect, selectedDoctor, placeholder = "Se
         </Card>
       )}
 
-      {showResults && results.length === 0 && query.length >= 2 && !isLoading && (
+      {showResults && results.length === 0 && query.length >= 3 && !isLoading && !error && (
         <Card className="absolute top-full left-0 right-0 z-50 mt-1">
           <CardContent className="p-4 text-center text-gray-500">
-            No doctors found for "{query}"
+            No doctors found for &quot;{query}&quot;
           </CardContent>
         </Card>
       )}

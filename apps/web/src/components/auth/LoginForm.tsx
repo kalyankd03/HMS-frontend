@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, storeToken, userProfileToParsedUser } from '@hms/core';
+import { loginSchema, storeToken } from '@hms/core';
 import type { LoginForm as LoginFormData } from '@hms/core';
 import { authApi } from '@/lib/api';
 import { Button } from "@/components/ui/button";
@@ -38,26 +38,23 @@ export function LoginForm() {
     try {
       console.log('Attempting login with:', { email: data.email });
       
+      // Base64 encode the password before sending to API
+      const encodedData = {
+        ...data,
+        password: btoa(data.password)
+      };
+      
       // Call the actual login API
-      const response = await authApi.login(data);
+      const response = await authApi.login(encodedData);
       
       console.log('Login successful:', { userId: response.user.user_id, email: response.user.email });
       
       // Store the JWT token from the API response
       storeToken(response.token);
       
-      // Fetch fresh user profile data with hospital information
-      try {
-        const profile = await authApi.getProfile(response.token);
-        const hospitalData = await authApi.getHospital(profile.hospital_id, response.token);
-        const enhancedUser = userProfileToParsedUser(profile, hospitalData.name);
-        console.log('User profile loaded:', enhancedUser);
-      } catch (profileError) {
-        console.warn('Failed to load user profile after login:', profileError);
-        // Continue with login even if profile fetch fails
-      }
+      console.log('Token stored, redirecting to dashboard');
       
-      // Redirect to dashboard on success
+      // Redirect to dashboard on success - useAuth hook will handle profile loading
       window.location.href = '/dashboard';
     } catch (error) {
       console.error('Login error:', error);

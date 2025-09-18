@@ -4,6 +4,7 @@ import { createHmsApiClient } from '@hms/api-client';
 const API_URLS = {
   authUrl: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:3001',
   patientUrl: process.env.NEXT_PUBLIC_PATIENT_SERVICE_URL || 'http://localhost:3002',
+  doctorUrl: process.env.NEXT_PUBLIC_DOCTOR_SERVICE_URL || 'http://localhost:3003',
 };
 
 // Create and export the API client instance

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, User, Bell, Shield, Database, Palette } from 'lucide-react';
+import { User, Bell, Shield, Database, Palette } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Settings',

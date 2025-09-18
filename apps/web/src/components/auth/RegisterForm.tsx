@@ -66,8 +66,14 @@ export function RegisterForm() {
         hospital_id: data.hospital_id
       });
       
+      // Base64 encode the password before sending to API
+      const encodedData = {
+        ...data,
+        password: btoa(data.password)
+      };
+      
       // Call the actual register API
-      const response = await authApi.register(data);
+      const response = await authApi.register(encodedData);
       
       console.log('Registration successful:', { id: response.id, email: response.email });
       

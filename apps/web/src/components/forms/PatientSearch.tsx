@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getToken } from '@hms/core';
+import { getStoredToken } from '@hms/core';
 import type { Patient } from '@hms/core';
 import { patientsApi } from '@/lib/api';
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,10 @@ export function PatientSearch({ onPatientSelect, selectedPatient, placeholder = 
   const [showResults, setShowResults] = useState(false);
 
   const searchPatients = async (searchQuery: string) => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
+    if (!searchQuery.trim() || searchQuery.length < 3) {
       setResults([]);
       setShowResults(false);
+      setError(null);
       return;
     }
 
@@ -33,7 +34,7 @@ export function PatientSearch({ onPatientSelect, selectedPatient, placeholder = 
     setError(null);
     
     try {
-      const token = getToken();
+      const token = getStoredToken();
       if (!token) {
         throw new Error('Authentication token not found');
       }
@@ -45,25 +46,31 @@ export function PatientSearch({ onPatientSelect, selectedPatient, placeholder = 
       console.error('Error searching patients:', error);
       setError(error instanceof Error ? error.message : 'Failed to search patients');
       setResults([]);
+      setShowResults(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Debounced search
+  // Debounced search - only search if no patient is selected or query doesn't match selected patient
   useEffect(() => {
+    if (selectedPatient && query === selectedPatient.name) {
+      return; // Don't search if we're showing the selected patient name
+    }
+    
     const timeoutId = setTimeout(() => {
       searchPatients(query);
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [query]);
+  }, [query, selectedPatient]);
 
   const handlePatientSelect = (patient: Patient) => {
     onPatientSelect(patient);
     setQuery(patient.name);
     setShowResults(false);
     setResults([]);
+    setError(null);
   };
 
   const formatDate = (dateString?: string | null) => {
@@ -152,10 +159,10 @@ export function PatientSearch({ onPatientSelect, selectedPatient, placeholder = 
         </Card>
       )}
 
-      {showResults && results.length === 0 && query.length >= 2 && !isLoading && (
+      {showResults && results.length === 0 && query.length >= 3 && !isLoading && !error && (
         <Card className="absolute top-full left-0 right-0 z-50 mt-1">
           <CardContent className="p-4 text-center text-gray-500">
-            No patients found for "{query}"
+            No patients found for &quot;{query}&quot;
           </CardContent>
         </Card>
       )}
