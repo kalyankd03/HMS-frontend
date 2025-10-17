@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Users, 
-  UserCheck, 
-  Clock, 
-  BarChart3, 
+import {
+  Users,
+  UserCheck,
+  Clock,
+  BarChart3,
   Settings,
   Home,
-  X
+  X,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +38,11 @@ const navigation = [
     name: 'Patient Queue',
     href: '/queue',
     icon: Clock,
+  },
+  {
+    name: 'Payments',
+    href: '/payments',
+    icon: CreditCard,
   },
   {
     name: 'Admin',

@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, RefreshCw, Users, AlertCircle, Play, RotateCcw, CheckCircle } from 'lucide-react';
+import { Clock, RefreshCw, Users, AlertCircle, Play, RotateCcw, CheckCircle, FileText } from 'lucide-react';
 import { doctorsApi } from '@/lib/api';
 import { getStoredToken } from '@hms/core';
 import type { QueueResponse, QueueVisit } from '@hms/api-client';
 
 export default function QueuePage() {
+  const router = useRouter();
   const [queueData, setQueueData] = useState<QueueResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,20 +55,16 @@ export default function QueuePage() {
   const handleStartVisit = async (opId: number) => {
     try {
       setActionLoading(prev => ({ ...prev, [opId]: true }));
-      
+
       const token = getStoredToken();
       if (!token) {
         throw new Error('No authentication token found');
       }
 
       await doctorsApi.startVisit(opId, token);
-      
-      // Show success message
-      setSuccessMessage('Visit started successfully');
-      setTimeout(() => setSuccessMessage(null), 3000);
-      
-      // Refresh queue data after successful action
-      await fetchQueueData(true);
+
+      // Navigate to EMR page
+      router.push(`/emr/${opId}`);
     } catch (err) {
       console.error('Failed to start visit:', err);
       setError(err instanceof Error ? err.message : 'Failed to start visit');
@@ -178,11 +176,17 @@ export default function QueuePage() {
     }
 
     if (status === 'active' || status === 'in_progress' || status === 'visit_started') {
-      console.log(`Rendering IN PROGRESS badge for ${visit.patient_name}`);
+      console.log(`Rendering IN PROGRESS button for ${visit.patient_name}`);
       return (
-        <Badge variant="default" className="bg-blue-600 text-white px-3 py-1">
-          In Progress
-        </Badge>
+        <Button
+          size="sm"
+          onClick={() => router.push(`/emr/${visit.op_id}`)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          style={{ minWidth: '80px' }}
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          Open EMR
+        </Button>
       );
     }
 

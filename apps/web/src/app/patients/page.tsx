@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Plus, Search, Ticket, X, CheckCircle, Phone, Calendar } from 'lucide-react';
+import { Users, Plus, Search, Ticket, X, CheckCircle, Phone, Calendar, ClipboardList, Settings } from 'lucide-react';
 import { CreatePatientForm } from '@/components/forms/CreatePatientForm';
 import { CreateOpTicketForm } from '@/components/forms/CreateOpTicketForm';
 import type { Patient, OpTicket } from '@hms/core';
@@ -84,89 +85,113 @@ export default function PatientsPage() {
 
   return (
     <>
-      <div className="flex-1 space-y-4 p-4 sm:p-6 lg:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Patients</h2>
-          <div className="flex items-center space-x-2">
+      <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Patient Desk</h2>
+            <p className="text-sm text-muted-foreground">
+              Register patients, create OP tickets, and pre-select billable services in one place.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline">
               <Search className="mr-2 h-4 w-4" />
-              Search Patients
+              Quick Search
+            </Button>
+            <Button variant="outline" onClick={() => setActiveForm('patient')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Patient
             </Button>
             <Button onClick={() => setActiveForm('opticket')}>
               <Ticket className="mr-2 h-4 w-4" />
               Create OP Ticket
             </Button>
-            <Button onClick={() => setActiveForm('patient')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Patient
-            </Button>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="mr-2 h-5 w-5" />
-                Patient Management
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Patient Registry
               </CardTitle>
               <CardDescription>
-                Add new patients and manage patient records
+                Onboard new patients and keep demographic information up to date.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Users className="mx-auto h-12 w-12 text-blue-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Manage Patients</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Add new patients to the system and manage their information.
-                </p>
-                {recentPatients.length > 0 && (
-                  <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                    <CheckCircle className="mr-1 h-4 w-4" />
-                    {recentPatients.length} patient{recentPatients.length === 1 ? '' : 's'} added recently
-                  </div>
-                )}
-                <div className="mt-6">
-                  <Button onClick={() => setActiveForm('patient')}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Patient
-                  </Button>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
+                Maintain a clean roster by registering visitors before their consultation. Quick search helps avoid duplicate records.
+              </div>
+              {recentPatients.length > 0 && (
+                <div className="flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+                  <CheckCircle className="h-4 w-4" />
+                  {recentPatients.length} patient{recentPatients.length === 1 ? '' : 's'} added in this session
                 </div>
+              )}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline">
+                  <Search className="mr-2 h-4 w-4" />
+                  Find Patient
+                </Button>
+                <Button onClick={() => setActiveForm('patient')}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Patient
+                </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Ticket className="mr-2 h-5 w-5" />
-                OP Tickets
+              <CardTitle className="flex items-center gap-2">
+                <Ticket className="h-5 w-5 text-green-500" />
+                OP Tickets & Billing
               </CardTitle>
               <CardDescription>
-                Create outpatient tickets for consultations
+                Generate visit tickets and pre-select billable services for the patient.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Ticket className="mx-auto h-12 w-12 text-green-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Create OP Tickets</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Generate tickets for outpatient consultations with doctors.
-                </p>
-                {recentOpTickets.length > 0 && (
-                  <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                    <CheckCircle className="mr-1 h-4 w-4" />
-                    {recentOpTickets.length} ticket{recentOpTickets.length === 1 ? '' : 's'} created recently
-                  </div>
-                )}
-                <div className="mt-6">
-                  <Button onClick={() => setActiveForm('opticket')}>
-                    <Ticket className="mr-2 h-4 w-4" />
-                    Create OP Ticket
-                  </Button>
-                </div>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
+                Choose the consulting doctor and optionally attach hospital services. Selected services are sent with the ticket for billing automation.
               </div>
+              {recentOpTickets.length > 0 && (
+                <div className="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                  <CheckCircle className="h-4 w-4" />
+                  {recentOpTickets.length} OP ticket{recentOpTickets.length === 1 ? '' : 's'} created recently
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button onClick={() => setActiveForm('opticket')}>
+                  <Ticket className="mr-2 h-4 w-4" />
+                  Create OP Ticket
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-indigo-500" />
+                Service Catalog
+              </CardTitle>
+              <CardDescription>
+                Keep the service catalog current for accurate ticket billing.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Administrators can manage consultation and procedure services from the Admin tab. Any changes are immediately available while creating OP tickets.
+              </p>
+              <Button variant="outline" asChild>
+                <Link href="/admin" className="flex items-center">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Open Service Management
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>

@@ -123,6 +123,7 @@ export interface OpTicket {
   patient_id: number;
   allotted_doctor_id: number;
   referral_doctor?: string | null;
+  service_ids?: number[];
 }
 
 export interface CreateOpTicketForm {
@@ -130,6 +131,7 @@ export interface CreateOpTicketForm {
   patient_query?: string;
   allotted_doctor_id: number;
   referral_doctor?: string;
+  service_ids?: number[];
 }
 
 export interface PatientSearchResponse {
@@ -148,6 +150,95 @@ export interface DoctorSearchResult {
 
 export interface DoctorSearchResponse {
   results: DoctorSearchResult[];
+}
+
+// Service catalog types
+export interface ServiceCatalogItem {
+  id: number;
+  hospital_id: number;
+  service_code: string;
+  service_name: string;
+  description?: string | null;
+  category?: string | null;
+  default_price: number;
+  is_active: boolean;
+  is_default_opd_service: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: number | null;
+  updated_by?: number | null;
+}
+
+export interface CreateServiceInput {
+  service_code: string;
+  service_name: string;
+  description?: string;
+  category?: string;
+  default_price: number;
+  is_default_opd_service?: boolean;
+}
+
+export interface UpdateServiceInput {
+  service_name?: string;
+  description?: string;
+  category?: string;
+  default_price?: number;
+  is_active?: boolean;
+}
+
+export interface BillingDocument {
+  id: number;
+  hospital_id: number;
+  patient_id: number;
+  op_ticket_id?: number | null;
+  document_type: string;
+  bill_number: string;
+  status: 'draft' | 'finalized' | 'cancelled' | 'refunded';
+  total_amount: number;
+  discount_amount: number;
+  net_total: number;
+  amount_paid: number;
+  balance_due: number;
+  notes?: string | null;
+  finalized_at?: string | null;
+  finalized_by?: number | null;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: number | null;
+  updated_by?: number | null;
+}
+
+export interface PaymentRecord {
+  id: number;
+  hospital_id: number;
+  patient_id: number;
+  payment_number: string;
+  payment_method: 'Cash' | 'Card' | 'UPI' | 'Insurance' | 'Corporate' | 'NEFT' | 'Bank';
+  amount: number;
+  status: 'completed' | 'pending' | 'failed' | 'refunded';
+  reference_number?: string | null;
+  card_last_four?: string | null;
+  upi_id?: string | null;
+  bank_name?: string | null;
+  notes?: string | null;
+  payment_date: string;
+  created_at?: string;
+  created_by?: number | null;
+  updated_by?: number | null;
+}
+
+export interface BillingDocumentFilters {
+  status?: BillingDocument['status'];
+  from_date?: string;
+  to_date?: string;
+  patient_id?: number;
+}
+
+export interface PaymentFilters {
+  status?: PaymentRecord['status'];
+  from_date?: string;
+  to_date?: string;
+  patient_id?: number;
 }
 
 // Roster management types
@@ -305,4 +396,19 @@ export interface PatientVisit {
   scheduledTime: string;
   status: "waiting" | "in_progress" | "done";
   prescription?: PrescriptionData;
+}
+
+// Medicine search types
+export interface MedicineSearchResult {
+  id: number;
+  name: string;
+  salt_composition?: string | null;
+  dosage_form?: string;
+  manufacturer_name?: string;
+  price?: string;
+  is_discontinued?: boolean;
+}
+
+export interface MedicineSearchResponse {
+  data: MedicineSearchResult[];
 }

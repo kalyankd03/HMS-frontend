@@ -1,5 +1,7 @@
 import { STORAGE_KEYS, ROLE_NAMES } from '../constants';
 import type { UserProfile } from '../types';
+import { decode } from 'js-base64';
+
 
 // JWT Payload structure based on backend implementation
 export interface JWTPayload {
@@ -29,6 +31,14 @@ export interface EnhancedUser extends ParsedUser {
 }
 
 /**
+ * Cross-platform base64 decode function
+ */
+
+function base64Decode(str: string): string {
+  return decode(str);
+}
+
+/**
  * Decode JWT token without verification (client-side parsing only)
  * Note: This should NOT be used for security validation
  */
@@ -47,7 +57,7 @@ export function decodeJWT(token: string): JWTPayload | null {
     const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
     
     // Decode base64url to JSON
-    const decodedPayload = atob(paddedPayload.replace(/-/g, '+').replace(/_/g, '/'));
+    const decodedPayload = base64Decode(paddedPayload.replace(/-/g, '+').replace(/_/g, '/'));
     
     return JSON.parse(decodedPayload) as JWTPayload;
   } catch (error) {
@@ -67,6 +77,31 @@ export function isTokenExpired(token: string): boolean {
 
   // exp is in seconds, Date.now() is in milliseconds
   return payload.exp * 1000 < Date.now();
+}
+
+/**
+ * Check if JWT token will expire within a given time buffer (in milliseconds)
+ */
+export function isTokenExpiringSoon(token: string, bufferMs: number = 5 * 60 * 1000): boolean {
+  const payload = decodeJWT(token);
+  if (!payload?.exp) {
+    return true;
+  }
+
+  // exp is in seconds, Date.now() is in milliseconds
+  return payload.exp * 1000 < (Date.now() + bufferMs);
+}
+
+/**
+ * Get token expiration time in milliseconds
+ */
+export function getTokenExpirationTime(token: string): number | null {
+  const payload = decodeJWT(token);
+  if (!payload?.exp) {
+    return null;
+  }
+
+  return payload.exp * 1000;
 }
 
 /**
@@ -94,37 +129,88 @@ export function getUserFromToken(token: string): ParsedUser | null {
 }
 
 /**
- * Get stored auth token from localStorage
+ * Cross-platform storage interface
+ */
+interface CrossPlatformStorage {
+  getItem(key: string): string | null | Promise<string | null>;
+  setItem(key: string, value: string): void | Promise<void>;
+  removeItem(key: string): void | Promise<void>;
+}
+
+/**
+ * Get platform-appropriate storage
+ */
+function getStorage(): CrossPlatformStorage | null {
+  // Web environment
+  if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
+    const window = (globalThis as any).window;
+    if (window && typeof window.localStorage !== 'undefined') {
+      return window.localStorage;
+    }
+  }
+  
+  // React Native environment - AsyncStorage should be injected if needed
+  // For now, return null to indicate no storage available
+  return null;
+}
+
+/**
+ * Get stored auth token from platform storage
  */
 export function getStoredToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null; // SSR safety
+  const storage = getStorage();
+  if (!storage) {
+    return null;
   }
 
-  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+  try {
+    const result = storage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    // Handle both sync and async storage
+    return typeof result === 'string' ? result : null;
+  } catch (error) {
+    console.error('Error getting stored token:', error);
+    return null;
+  }
 }
 
 /**
- * Store auth token in localStorage
+ * Store auth token in platform storage
  */
 export function storeToken(token: string): void {
-  if (typeof window === 'undefined') {
-    return; // SSR safety
+  const storage = getStorage();
+  if (!storage) {
+    return;
   }
 
-  localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+  try {
+    storage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+  } catch (error) {
+    console.error('Error storing token:', error);
+  }
 }
 
 /**
- * Remove auth token from localStorage
+ * Remove auth token from platform storage
  */
 export function removeToken(): void {
-  if (typeof window === 'undefined') {
-    return; // SSR safety
+  const storage = getStorage();
+  if (!storage) {
+    return;
   }
 
-  localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-  sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+  try {
+    storage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    
+    // Also try session storage on web
+    if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
+      const window = (globalThis as any).window;
+      if (window && typeof window.sessionStorage !== 'undefined') {
+        window.sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      }
+    }
+  } catch (error) {
+    console.error('Error removing token:', error);
+  }
 }
 
 /**

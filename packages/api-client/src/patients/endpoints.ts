@@ -3,6 +3,7 @@ import type {
   CreatePatientForm,
   CreateOpTicketForm,
   OpTicket,
+  DoctorSearchResponse,
 } from '@hms/core';
 import type { HttpClient } from '../client/http-client';
 
@@ -38,6 +39,12 @@ export class PatientsApi {
   async deletePatient(patientId: number, token: string): Promise<{ message: string }> {
     const authenticatedClient = this.client.withAuth(token);
     return authenticatedClient.request<{ message: string }>(`${this.baseUrl}/api/patients/${patientId}`, { method: 'DELETE' });
+  }
+
+  async searchDoctors(query: string, token: string, limit = 10): Promise<DoctorSearchResponse> {
+    const authenticatedClient = this.client.withAuth(token);
+    const params = new URLSearchParams({ q: query, limit: String(limit) });
+    return authenticatedClient.request<DoctorSearchResponse>(`${this.baseUrl}/api/doctors/search?${params.toString()}`);
   }
 }
 

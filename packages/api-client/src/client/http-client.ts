@@ -59,15 +59,29 @@ export class HttpClient {
       (error: AxiosError) => {
         const requestId = error.config?.metadata?.requestId;
         
+        // Handle authentication errors (401/403)
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          console.warn(`[${requestId}] Authentication error: ${error.response.status}`);
+          // Create enhanced error with auth flag
+          const authError = new Error(error.response.statusText || 'Authentication failed');
+          (authError as any).status = error.response.status;
+          (authError as any).isAuthError = true;
+          throw authError;
+        }
+        
         if (error.response?.data && isApiError(error.response.data)) {
           const apiError = error.response.data;
           console.warn(`[${requestId}] API Error: ${apiError.error.code} - ${apiError.error.message}`);
-          throw new Error(apiError.error.message);
+          const enhancedError = new Error(apiError.error.message);
+          (enhancedError as any).status = error.response.status;
+          throw enhancedError;
         }
         
         if (error.response) {
           console.error(`[${requestId}] HTTP Error: ${error.response.status} ${error.response.statusText}`);
-          throw new Error(error.response.statusText || 'Request failed');
+          const enhancedError = new Error(error.response.statusText || 'Request failed');
+          (enhancedError as any).status = error.response.status;
+          throw enhancedError;
         }
         
         const message = getErrorMessage(error);

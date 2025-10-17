@@ -1,11 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createOpTicketSchema, getStoredToken } from '@hms/core';
-import type { CreateOpTicketForm as CreateOpTicketFormData, Patient, DoctorWithUser } from '@hms/core';
-import { patientsApi } from '@/lib/api';
+import type {
+  CreateOpTicketForm as CreateOpTicketFormData,
+  Patient,
+  DoctorWithUser,
+  ServiceCatalogItem,
+} from '@hms/core';
+import { patientsApi, servicesApi } from '@/lib/api';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -14,12 +19,26 @@ import {
   FormField, 
   FormItem, 
   FormLabel, 
-  FormMessage 
+  FormMessage,
+  FormDescription 
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Ticket, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Ticket, CheckCircle, AlertCircle, ClipboardList } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { DoctorSearch } from './DoctorSearch';
+
+const currencyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 2,
+});
+
+const formatPrice = (value: number) => currencyFormatter.format(Number.isFinite(value) ? value : 0);
+
+const normalizeService = (service: ServiceCatalogItem): ServiceCatalogItem => ({
+  ...service,
+  default_price: Number(service.default_price ?? 0),
+});
 
 interface CreateOpTicketFormProps {
   readonly onSuccess?: (opTicket: unknown) => void;
@@ -32,6 +51,9 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorWithUser | null>(null);
+  const [services, setServices] = useState<ServiceCatalogItem[]>([]);
+  const [servicesError, setServicesError] = useState<string | null>(null);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
 
   const form = useForm<CreateOpTicketFormData>({
     resolver: zodResolver(createOpTicketSchema),
@@ -39,8 +61,34 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
       patient_id: undefined,
       allotted_doctor_id: undefined,
       referral_doctor: '',
+      service_ids: [],
     },
   });
+
+  useEffect(() => {
+    const loadServices = async () => {
+      const token = getStoredToken();
+      if (!token) {
+        setServices([]);
+        setServicesError('Unable to load services. Please log in again.');
+        return;
+      }
+
+      try {
+        setIsLoadingServices(true);
+        setServicesError(null);
+        const data = await servicesApi.listServices(token);
+        setServices(data.map(normalizeService));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to load services';
+        setServicesError(message);
+      } finally {
+        setIsLoadingServices(false);
+      }
+    };
+
+    void loadServices();
+  }, []);
 
   const onSubmit = async (data: CreateOpTicketFormData) => {
     setIsLoading(true);
@@ -63,7 +111,12 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
       setSuccessMessage(`OP ticket created successfully! Ticket ID: ${opTicket.op_id}`);
       
       // Reset form and selections
-      form.reset();
+      form.reset({
+        patient_id: undefined,
+        allotted_doctor_id: undefined,
+        referral_doctor: '',
+        service_ids: [],
+      });
       setSelectedPatient(null);
       setSelectedDoctor(null);
       
@@ -82,7 +135,12 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
   };
 
   const handleCancel = () => {
-    form.reset();
+    form.reset({
+      patient_id: undefined,
+      allotted_doctor_id: undefined,
+      referral_doctor: '',
+      service_ids: [],
+    });
     setSelectedPatient(null);
     setSelectedDoctor(null);
     setError(null);
@@ -172,6 +230,85 @@ export function CreateOpTicketForm({ onSuccess, onCancel }: CreateOpTicketFormPr
                   )}
                 </FormItem>
               )}
+            />
+
+            {/* Service Selection */}
+            <FormField
+              control={form.control}
+              name="service_ids"
+              render={({ field }) => {
+                const selected = field.value ?? [];
+                const toggleService = (serviceId: number) => {
+                  if (selected.includes(serviceId)) {
+                    field.onChange(selected.filter((id) => id !== serviceId));
+                  } else {
+                    field.onChange([...selected, serviceId]);
+                  }
+                };
+
+                return (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4" />
+                      Services for this OP Ticket
+                    </FormLabel>
+                    <FormDescription>
+                      Select optional services to include when creating the billing record. You can update services later from the billing section.
+                    </FormDescription>
+                    <div className="mt-3 rounded-lg border border-border/60 bg-muted/10 p-3">
+                      {isLoadingServices ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Loading available services...
+                        </div>
+                      ) : servicesError ? (
+                        <p className="text-sm text-red-600">{servicesError}</p>
+                      ) : services.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No services have been configured yet. Ask an administrator to add services from the Admin tab.
+                        </p>
+                      ) : (
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {services.map((service) => {
+                            const isSelected = selected.includes(service.id);
+                            return (
+                              <button
+                                key={service.id}
+                                type="button"
+                                onClick={() => toggleService(service.id)}
+                                className={`flex w-full flex-col rounded-lg border p-3 text-left transition hover:border-primary ${
+                                  isSelected ? 'border-primary bg-primary/10' : 'border-border/60 bg-background'
+                                }`}
+                              >
+                                <span className="text-sm font-semibold">{service.service_name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {service.service_code} • {formatPrice(service.default_price)}
+                                </span>
+                                {service.is_default_opd_service ? (
+                                  <span className="mt-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                    Default OPD service
+                                  </span>
+                                ) : null}
+                                {isSelected ? (
+                                  <span className="mt-2 text-xs font-medium text-primary">
+                                    Selected
+                                  </span>
+                                ) : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    {selected.length > 0 ? (
+                      <p className="pt-2 text-xs text-muted-foreground">
+                        {selected.length} service{selected.length > 1 ? 's' : ''} selected
+                      </p>
+                    ) : null}
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             {/* Referral Doctor */}
