@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Menu, 
-  ChevronLeft, 
-  ChevronRight, 
-  LogOut, 
-  User,
-  Heart
+import {
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  User
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -35,7 +35,7 @@ export function Header({ onMenuClick, sidebarCollapsed, onToggleCollapse }: Head
     } finally {
       setIsLoggingOut(false);
     }
-  };
+  }; 
 
   return (
     <header className="header-fixed fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm" style={{ backgroundColor: 'white', zIndex: 9999 }}>
@@ -68,8 +68,14 @@ export function Header({ onMenuClick, sidebarCollapsed, onToggleCollapse }: Head
 
           {/* Hospital Logo & Name */}
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Heart className="h-5 w-5 text-white" />
+            <div className="relative w-10 h-10">
+              <Image
+                src="/logo2.png"
+                alt="Hospital Logo"
+                fill
+                className="object-contain"
+                sizes="40px"
+              />
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg font-semibold text-gray-900">
@@ -90,7 +96,7 @@ export function Header({ onMenuClick, sidebarCollapsed, onToggleCollapse }: Head
               {user?.name || 'Loading...'}
             </p>
             <p className="text-xs text-gray-500">
-              {user?.role_name || 'Unknown Role'}
+              {user?.role_name || 'User'}
             </p>
           </div>
           

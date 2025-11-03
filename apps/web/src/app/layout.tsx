@@ -13,11 +13,21 @@ export const metadata: Metadata = {
   description: 'Comprehensive hospital management and patient care system',
   keywords: ['hospital', 'healthcare', 'patient management', 'medical records'],
   authors: [{ name: 'HMS Team' }],
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png' },
+      { url: '/logo2.png', type: 'image/png', sizes: '32x32' },
+    ],
+    apple: [
+      { url: '/logo2.png', type: 'image/png' },
+    ],
+  },
   openGraph: {
     type: 'website',
     siteName: 'Hospital Management System',
     title: 'Hospital Management System',
     description: 'Comprehensive hospital management and patient care system',
+    images: [{ url: '/logo2.png' }],
   },
   robots: {
     index: true,

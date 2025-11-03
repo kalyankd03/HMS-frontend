@@ -82,14 +82,20 @@ export default function QueuePage() {
         throw new Error('No authentication token found');
       }
 
-      await doctorsApi.resumeVisit(opId, token);
-      
-      // Show success message
-      setSuccessMessage('Visit resumed successfully');
-      setTimeout(() => setSuccessMessage(null), 3000);
-      
-      // Refresh queue data after successful action
-      await fetchQueueData(true);
+      const response = await doctorsApi.resumeVisit(opId, token);
+
+      if (response?.cached_data?.form_state && typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(
+            `emr-draft-${opId}`,
+            JSON.stringify(response.cached_data.form_state)
+          );
+        } catch (storageError) {
+          console.warn('Failed to persist EMR draft in session storage:', storageError);
+        }
+      }
+
+      router.push(`/emr/${opId}`);
     } catch (err) {
       console.error('Failed to resume visit:', err);
       setError(err instanceof Error ? err.message : 'Failed to resume visit');
@@ -112,6 +118,7 @@ export default function QueuePage() {
       case 'in_progress': return 'in-progress';
       case 'visit_started': return 'in-progress';
       case 'paused': return 'paused';
+      case 'visit_paused': return 'paused';
       default: return status;
     }
   };
@@ -128,8 +135,25 @@ export default function QueuePage() {
     return 'outline';
   };
 
+  const normalizeStatus = (status: string): 'waiting' | 'paused' | 'in-progress' | 'other' => {
+    const lower = status.toLowerCase();
+    switch (lower) {
+      case 'waiting':
+        return 'waiting';
+      case 'paused':
+      case 'visit_paused':
+        return 'paused';
+      case 'active':
+      case 'in_progress':
+      case 'visit_started':
+        return 'in-progress';
+      default:
+        return 'other';
+    }
+  };
+
   const renderActionButton = (visit: QueueVisit) => {
-    const status = visit.visit_status.toLowerCase();
+    const status = normalizeStatus(visit.visit_status);
     const isLoadingAction = actionLoading[visit.op_id] || false;
 
     console.log(`Rendering button for ${visit.patient_name} with status: ${status}`);
@@ -175,7 +199,7 @@ export default function QueuePage() {
       );
     }
 
-    if (status === 'active' || status === 'in_progress' || status === 'visit_started') {
+    if (status === 'in-progress') {
       console.log(`Rendering IN PROGRESS button for ${visit.patient_name}`);
       return (
         <Button

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Save, ArrowLeft, FileText, X, Heart, Activity, Stethoscope, Pill, FlaskConical, FileHeart } from 'lucide-react';
+import { Save, ArrowLeft, FileText, X, Heart, Activity, Stethoscope, Pill, FlaskConical, FileHeart, CheckCircle } from 'lucide-react';
 import { doctorsApi, medicinesApi, authApi } from '@/lib/api';
 import { buildPrescriptionPdf, downloadPrescriptionPdf } from '@/lib/prescription-pdf';
 import type { PrescriptionGenerationPayload } from '@/lib/prescription-pdf';
@@ -15,6 +15,7 @@ import type { QueueVisit } from '@hms/api-client';
 import type { MedicineSearchResult, DoctorWithUser, Hospital } from '@hms/core';
 import type jsPDF from 'jspdf';
 import { getUserFromStorage } from '@/lib/auth-storage';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface EMREntryDetails {
   [key: string]: string;
@@ -93,14 +94,16 @@ export default function EMRPage() {
   const [hospitalInfo, setHospitalInfo] = useState<Hospital | null>(null);
   const currentUser = getUserFromStorage();
 
-  const [formData, setFormData] = useState<EMRFormData>({
+  const defaultFormData: EMRFormData = {
     vitals: [],
     medicalHistory: [],
     symptoms: [],
     diagnosis: [],
     medications: [],
     investigations: [],
-  });
+  };
+
+  const [formData, setFormDataState] = useState<EMRFormData>(defaultFormData);
 
   const [inputs, setInputs] = useState({
     vitals: '',
@@ -111,11 +114,75 @@ export default function EMRPage() {
     investigations: '',
   });
 
+  const [isDirty, setIsDirty] = useState(false);
+  const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
+  const [isPausing, setIsPausing] = useState(false);
+  const [pauseError, setPauseError] = useState<string | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const updateFormData = useCallback((
+    updater: EMRFormData | ((prev: EMRFormData) => EMRFormData),
+    options?: { markDirty?: boolean }
+  ) => {
+    const { markDirty = true } = options ?? {};
+    let shouldMarkDirty = false;
+
+    setFormDataState(prev => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: EMRFormData) => EMRFormData)(prev)
+        : updater;
+
+      if (markDirty && next !== prev) {
+        shouldMarkDirty = true;
+      }
+
+      return next;
+    });
+
+    if (shouldMarkDirty) {
+      setIsDirty(true);
+    }
+  }, [setFormDataState, setIsDirty]);
+
   // Medicine search state
   const [medicineSearchResults, setMedicineSearchResults] = useState<MedicineSearchResult[]>([]);
   const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
   const [isSearchingMedicine, setIsSearchingMedicine] = useState(false);
   const medicineDropdownRef = useRef<HTMLDivElement>(null);
+  const hasHydratedFromCache = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const storageKey = `emr-draft-${opId}`;
+    const storedDraft = sessionStorage.getItem(storageKey);
+
+    if (!storedDraft) {
+      return;
+    }
+
+    try {
+      const parsedDraft = JSON.parse(storedDraft) as Partial<EMRFormData> | undefined;
+      if (parsedDraft) {
+        const hydratedDraft: EMRFormData = {
+          vitals: parsedDraft.vitals ?? [],
+          medicalHistory: parsedDraft.medicalHistory ?? [],
+          symptoms: parsedDraft.symptoms ?? [],
+          diagnosis: parsedDraft.diagnosis ?? [],
+          medications: parsedDraft.medications ?? [],
+          investigations: parsedDraft.investigations ?? [],
+        };
+        updateFormData(() => hydratedDraft, { markDirty: false });
+        hasHydratedFromCache.current = true;
+      }
+    } catch (storageError) {
+      console.warn('Failed to hydrate EMR draft from session storage:', storageError);
+    } finally {
+      sessionStorage.removeItem(storageKey);
+    }
+  }, [opId, updateFormData]);
 
   useEffect(() => {
     const fetchPatientData = async () => {
@@ -217,6 +284,44 @@ export default function EMRPage() {
     return () => clearTimeout(timeoutId);
   }, [inputs.medications]);
 
+  useEffect(() => {
+    if (!patientData || hasHydratedFromCache.current) {
+      return;
+    }
+
+    const cachedClinicalData = patientData.clinical_data as { form_state?: EMRFormData } | null | undefined;
+    const cachedFormData = cachedClinicalData?.form_state;
+
+    if (cachedFormData) {
+      const hydratedFormData: EMRFormData = {
+        vitals: cachedFormData.vitals ?? [],
+        medicalHistory: cachedFormData.medicalHistory ?? [],
+        symptoms: cachedFormData.symptoms ?? [],
+        diagnosis: cachedFormData.diagnosis ?? [],
+        medications: cachedFormData.medications ?? [],
+        investigations: cachedFormData.investigations ?? [],
+      };
+
+      updateFormData(() => hydratedFormData, { markDirty: false });
+    }
+
+    hasHydratedFromCache.current = true;
+  }, [patientData, updateFormData]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!isDirty) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
 const createEntry = (section: SectionKey, text: string): EMREntry => {
   const fields = sectionFieldConfigs[section];
   const details = fields
@@ -240,58 +345,123 @@ const handleSelectMedicine = (medicine: MedicineSearchResult) => {
     subtitle: medicine.dosage_form ?? undefined,
     caption: medicine.salt_composition ?? undefined,
   };
-  setFormData(prev => ({
+  updateFormData(prev => ({
     ...prev,
     medications: [...prev.medications, entry],
   }));
-    setInputs(prev => ({ ...prev, medications: '' }));
-    setShowMedicineDropdown(false);
-  };
+  setInputs(prev => ({ ...prev, medications: '' }));
+  setShowMedicineDropdown(false);
+};
 
-  const handleAddEntry = (section: keyof EMRFormData) => {
-    const value = inputs[section].trim();
-    if (value) {
-      const newEntry = createEntry(section, value);
-      setFormData(prev => ({
-        ...prev,
-        [section]: [...prev[section], newEntry],
-      }));
-      setInputs(prev => ({ ...prev, [section]: '' }));
-    }
-  };
-
-  const handleRemoveEntry = (section: keyof EMRFormData, id: string) => {
-    setFormData(prev => ({
+const handleAddEntry = (section: keyof EMRFormData) => {
+  const value = inputs[section].trim();
+  if (value) {
+    const newEntry = createEntry(section, value);
+    updateFormData(prev => ({
       ...prev,
-      [section]: prev[section].filter(entry => entry.id !== id),
+      [section]: [...prev[section], newEntry],
     }));
-  };
+    setInputs(prev => ({ ...prev, [section]: '' }));
+  }
+};
 
-  const handleKeyPress = (e: React.KeyboardEvent, section: keyof EMRFormData) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddEntry(section);
+const handleRemoveEntry = (section: keyof EMRFormData, id: string) => {
+  updateFormData(prev => ({
+    ...prev,
+    [section]: prev[section].filter(entry => entry.id !== id),
+  }));
+};
+
+const handleKeyPress = (e: React.KeyboardEvent, section: keyof EMRFormData) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handleAddEntry(section);
+  }
+};
+
+const handleDetailChange = (section: SectionKey, id: string, fieldKey: string, value: string) => {
+  updateFormData(prev => ({
+    ...prev,
+    [section]: prev[section].map(entry =>
+      entry.id === id
+        ? {
+            ...entry,
+            details: {
+              ...(entry.details ?? {}),
+              [fieldKey]: value,
+            },
+          }
+        : entry
+    ),
+  }));
+};
+
+const handleBackClick = () => {
+  setPauseError(null);
+  setIsPauseDialogOpen(true);
+};
+
+const handlePauseVisit = async (shouldSaveDraft: boolean) => {
+  try {
+    setPauseError(null);
+    setIsPausing(true);
+
+    const token = getStoredToken();
+    if (!token) {
+      throw new Error('No authentication token found');
     }
-  };
 
-  const handleDetailChange = (section: SectionKey, id: string, fieldKey: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: prev[section].map(entry =>
-        entry.id === id
-          ? {
-              ...entry,
-              details: {
-                ...(entry.details ?? {}),
-                [fieldKey]: value,
-              },
-            }
-          : entry
-      ),
-    }));
-  };
+    const payload = shouldSaveDraft
+      ? {
+          clinical_data: {
+            form_state: formData,
+            saved_at: new Date().toISOString(),
+          },
+        }
+      : undefined;
 
-  const handleSaveEMR = async () => {
+    await doctorsApi.pauseVisit(opId, token, payload);
+    setIsDirty(false);
+    setIsPauseDialogOpen(false);
+    router.push('/queue');
+  } catch (err) {
+    console.error('Failed to pause visit:', err);
+    setPauseError(err instanceof Error ? err.message : 'Failed to pause visit');
+  } finally {
+    setIsPausing(false);
+  }
+};
+
+const handleEndVisit = async () => {
+  try {
+    setIsCompleting(true);
+    const token = getStoredToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const primaryDiagnosis = formData.diagnosis[0]?.text;
+    await doctorsApi.completeVisit(opId, token, {
+      primary_diagnosis_name: primaryDiagnosis,
+      clinical_notes: JSON.stringify(formData),
+    });
+
+    if (typeof window !== 'undefined') {
+      const storageKey = `emr-draft-${opId}`;
+      sessionStorage.removeItem(storageKey);
+    }
+
+    setIsDirty(false);
+    router.push('/queue');
+  } catch (err) {
+    console.error('Failed to complete visit:', err);
+    setError(err instanceof Error ? err.message : 'Failed to complete visit');
+  } finally {
+    setIsCompleting(false);
+  }
+};
+
+const handleSaveEMR = async () => {
     try {
       setIsSaving(true);
       const token = getStoredToken();
@@ -481,7 +651,7 @@ const handleSelectMedicine = (medicine: MedicineSearchResult) => {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" onClick={() => router.push('/queue')}>
+            <Button variant="ghost" size="sm" onClick={handleBackClick} disabled={isPausing || isCompleting}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h2 className="text-3xl font-bold tracking-tight">Electronic Medical Record</h2>
@@ -498,11 +668,19 @@ const handleSelectMedicine = (medicine: MedicineSearchResult) => {
           )}
         </div>
         <div className="flex items-center space-x-2">
-          <Button onClick={handleSaveEMR} disabled={isSaving}>
+          <Button
+            variant="destructive"
+            onClick={handleEndVisit}
+            disabled={isPausing || isCompleting}
+          >
+            <CheckCircle className="mr-2 h-4 w-4" />
+            {isCompleting ? 'Ending...' : 'End Visit'}
+          </Button>
+          <Button onClick={handleSaveEMR} disabled={isSaving || isPausing || isCompleting}>
             <Save className="mr-2 h-4 w-4" />
             {isSaving ? 'Saving...' : 'Save EMR'}
           </Button>
-          <Button variant="outline" onClick={handleGeneratePrescription}>
+          <Button variant="outline" onClick={handleGeneratePrescription} disabled={isPausing || isCompleting}>
             <FileText className="mr-2 h-4 w-4" />
             Generate Prescription
           </Button>
@@ -665,6 +843,53 @@ const handleSelectMedicine = (medicine: MedicineSearchResult) => {
           );
         })}
       </div>
+      <Dialog
+        open={isPauseDialogOpen}
+        onOpenChange={(open) => {
+          if (!isPausing) {
+            if (!open) {
+              setPauseError(null);
+            }
+            setIsPauseDialogOpen(open);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pause this visit?</DialogTitle>
+            <DialogDescription>
+              You can resume the visit from the queue later. Choose whether to keep the current EMR draft before pausing.
+            </DialogDescription>
+          </DialogHeader>
+          {pauseError && (
+            <p className="text-sm text-destructive">
+              {pauseError}
+            </p>
+          )}
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPauseError(null);
+                setIsPauseDialogOpen(false);
+              }}
+              disabled={isPausing}
+            >
+              Continue Editing
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => handlePauseVisit(false)}
+              disabled={isPausing}
+            >
+              Pause without Saving
+            </Button>
+            <Button onClick={() => handlePauseVisit(true)} disabled={isPausing}>
+              {isPausing ? 'Pausing...' : 'Save & Pause'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {isPreviewOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="relative flex w-full max-w-4xl flex-col rounded-lg bg-white shadow-2xl">

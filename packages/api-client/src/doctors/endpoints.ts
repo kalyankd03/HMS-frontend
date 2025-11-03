@@ -24,6 +24,7 @@ export interface QueueVisit {
   primary_diagnosis_code: string | null;
   primary_diagnosis_name: string | null;
   wait_time_minutes: number;
+  clinical_data?: Record<string, unknown> | null;
 }
 
 export interface QueueStats {
@@ -153,9 +154,7 @@ export class DoctorsApi {
   }
 
   async pauseVisit(opId: number, token: string, data?: {
-    reason?: string;
-    notes?: string;
-    clinical_data?: any;
+    clinical_data?: Record<string, unknown>;
   }): Promise<{ message: string }> {
     const authenticatedClient = this.client.withAuth(token);
     return authenticatedClient.request<{ message: string }>(`${this.baseUrl}/api/visits/${opId}/pause`, {

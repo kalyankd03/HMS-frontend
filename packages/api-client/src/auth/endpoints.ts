@@ -32,6 +32,7 @@ export class AuthApi {
     const authenticatedClient = this.client.withAuth(token);
     return authenticatedClient.request<Hospital>(`/api/hospitals/${hospitalId}`);
   }
+  
 }
 
 export function createAuthApi(client: HttpClient): AuthApi {
