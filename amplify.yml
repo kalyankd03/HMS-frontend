@@ -14,8 +14,13 @@ applications:
         build:
           commands:
             - pnpm turbo run build --filter=@hms/web
+            # Flatten HTML structure for static serving
+            - mkdir -p deploy-output/_next
+            - cp apps/web/.next/server/app/*.html deploy-output/
+            - cp -r apps/web/.next/static deploy-output/_next/static
+            - cp -r apps/web/public/* deploy-output/
       artifacts:
-        baseDirectory: apps/web/.next
+        baseDirectory: deploy-output
         files:
           - '**/*'
       cache:
