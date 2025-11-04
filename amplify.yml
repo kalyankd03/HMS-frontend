@@ -19,6 +19,11 @@ applications:
             - cp apps/web/.next/server/app/*.html deploy-output/
             - cp -r apps/web/.next/static deploy-output/_next/static
             - cp -r apps/web/public/* deploy-output/
+            # Copy server files for Next.js image optimization and routing
+            - cp -r apps/web/.next/server deploy-output/_next/server
+            - cp apps/web/.next/*.json deploy-output/_next/
+            - mkdir -p deploy-output/node_modules/next
+            - cp apps/web/node_modules/next/package.json deploy-output/node_modules/next/
       artifacts:
         baseDirectory: deploy-output
         files:
