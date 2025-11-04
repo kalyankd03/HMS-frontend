@@ -14,16 +14,16 @@ applications:
         build:
           commands:
             - pnpm turbo run build --filter=@hms/web
-            # Create a package.json for the standalone server
-            - cd apps/web/.next/standalone && echo '{"type":"commonjs"}' > package.json
+            # Copy static assets into standalone output
+            - cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+            - cp -r apps/web/public apps/web/.next/standalone/apps/web/public
       artifacts:
         baseDirectory: apps/web/.next/standalone
         files:
           - '**/*'
       cache:
         paths:
-          - node_modules/**/*
-          - $HOME/.pnpm-store/**/*
+          - .pnpm-store/**/*
           - .turbo/**/*
           - apps/web/.next/cache/**/*
     buildCommand: cd apps/web && node server.js
