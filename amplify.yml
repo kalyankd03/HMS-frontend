@@ -5,19 +5,26 @@ applications:
       phases:
         preBuild:
           commands:
+            # Setup pnpm
             - export PNPM_HOME=$HOME/.pnpm
             - export PATH=$PNPM_HOME:$PATH
             - corepack enable
             - corepack prepare pnpm@9.15.9 --activate
+            - pnpm --version
+            # Navigate to monorepo root and install dependencies
             - cd ../.. && pnpm install --frozen-lockfile
         build:
           commands:
+            # Build the web app from monorepo root
             - cd ../.. && pnpm turbo run build --filter=@hms/web
+            # Copy build artifacts back to appRoot for Amplify
+            - cd ../.. && cp -r apps/web/.next $AMPLIFY_WORKING_DIR/
       artifacts:
         baseDirectory: .next
         files:
           - '**/*'
       cache:
         paths:
-          - $HOME/.pnpm-store/**/*
+          - ../../node_modules/.cache/**/*
+          - ../../.turbo/**/*
           - .next/cache/**/*
