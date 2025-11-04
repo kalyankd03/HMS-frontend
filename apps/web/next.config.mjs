@@ -33,9 +33,6 @@ const nextConfig = {
     NEXT_PUBLIC_PATIENT_URL: process.env.NEXT_PUBLIC_PATIENT_URL,
   },
 
-  // Output configuration - standalone for SSR support
-  output: 'standalone',
-
   // Image domains
   images: {
     domains: ['localhost'],

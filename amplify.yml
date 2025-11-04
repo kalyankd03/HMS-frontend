@@ -1,11 +1,12 @@
 version: 1
 applications:
-  - appRoot: .
+  - appRoot: apps/web
     platform: WEB_COMPUTE
     frontend:
       phases:
         preBuild:
           commands:
+            - cd ../..
             - export PNPM_HOME=$HOME/.pnpm
             - export PATH=$PNPM_HOME:$PATH
             - corepack enable
@@ -13,20 +14,14 @@ applications:
             - pnpm install --frozen-lockfile
         build:
           commands:
+            - cd ../..
             - pnpm turbo run build --filter=@hms/web
-            # Copy complete .next directory into standalone
-            - cp -r apps/web/.next apps/web/.next/standalone/apps/web/.next
-            # Remove nested standalone to avoid duplication
-            - rm -rf apps/web/.next/standalone/apps/web/.next/standalone
-            # Copy public directory
-            - cp -r apps/web/public apps/web/.next/standalone/apps/web/public
       artifacts:
-        baseDirectory: apps/web/.next/standalone
+        baseDirectory: .next
         files:
           - '**/*'
       cache:
         paths:
-          - .pnpm-store/**/*
-          - .turbo/**/*
-          - apps/web/.next/cache/**/*
-    buildCommand: cd apps/web && node server.js
+          - ../../.pnpm-store/**/*
+          - ../../.turbo/**/*
+          - .next/cache/**/*
