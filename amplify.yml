@@ -1,21 +1,25 @@
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        # Install pnpm globally
-        - npm install -g pnpm@9.15.9
-        # Install dependencies
-        - pnpm install
-    build:
-      commands:
-        # Run the build command
-        - pnpm run build
-  artifacts:
-    baseDirectory: .next
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - .next/cache/**/*
-      - node_modules/**/*
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - export PNPM_HOME=$HOME/.pnpm
+            - export PATH=$PNPM_HOME:$PATH
+            - corepack enable
+            - corepack prepare pnpm@9.15.9 --activate
+            - pnpm install --frozen-lockfile
+        build:
+          commands:
+            - pnpm turbo run build --filter=@hms/web
+      artifacts:
+        baseDirectory: apps/web/.next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+          - $HOME/.pnpm-store/**/*
+          - .turbo/**/*
+          - apps/web/.next/cache/**/*

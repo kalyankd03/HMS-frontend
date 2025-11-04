@@ -17,7 +17,7 @@ export default function QueuePage() {
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState<Record<number, boolean>>({});
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successMessage] = useState<string | null>(null);
 
   const fetchQueueData = useCallback(async (refresh = false) => {
     try {

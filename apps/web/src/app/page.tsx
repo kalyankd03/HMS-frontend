@@ -110,7 +110,7 @@ export default function HomePage() {
           <Card className="rounded-3xl border-sky-200 bg-gradient-to-br from-white via-sky-50/50 to-indigo-50/30 p-10 shadow-xl">
             <CardContent className="space-y-6 p-0 text-lg text-slate-700 leading-relaxed">
               <p className="text-xl font-semibold text-slate-900">
-                Thravi Healthtech Private Limited is building India's next-generation AI healthcare infrastructure.
+                Thravi Healthtech Private Limited is building India&apos;s next-generation AI healthcare infrastructure.
               </p>
               <p>
                 We bring automation, analytics, and interoperability together so hospitals can deliver compassionate, precise, and efficient care at scale.
@@ -151,7 +151,7 @@ export default function HomePage() {
               From Data to Diagnosis — Powered by AI
             </h2>
             <p className="text-xl text-sky-100 leading-relaxed">
-              Thravi's AI engine summarizes lab reports, predicts patient trends, and assists clinicians in real-time for faster, more reliable care.
+              Thravi&apos;s AI engine summarizes lab reports, predicts patient trends, and assists clinicians in real-time for faster, more reliable care.
             </p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">

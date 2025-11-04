@@ -78,7 +78,7 @@ export function BookDemoDialog({ trigger }: BookDemoDialogProps) {
             Book a Demo
           </DialogTitle>
           <DialogDescription className="text-slate-600">
-            Fill in your details and we'll get in touch to schedule a personalized demo of Thravi HMS.
+            Fill in your details and we&apos;ll get in touch to schedule a personalized demo of Thravi HMS.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
