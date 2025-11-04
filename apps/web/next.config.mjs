@@ -33,8 +33,8 @@ const nextConfig = {
     NEXT_PUBLIC_PATIENT_URL: process.env.NEXT_PUBLIC_PATIENT_URL,
   },
   
-  // Output configuration
-  output: 'standalone',
+  // Output configuration - static export for AWS Amplify
+  output: 'export',
   
   // Image domains
   images: {
