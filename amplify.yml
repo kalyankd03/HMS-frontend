@@ -1,6 +1,6 @@
 version: 1
 applications:
-  - appRoot: .
+  - appRoot: apps/web
     frontend:
       phases:
         preBuild:
@@ -9,17 +9,15 @@ applications:
             - export PATH=$PNPM_HOME:$PATH
             - corepack enable
             - corepack prepare pnpm@9.15.9 --activate
-            - pnpm install --frozen-lockfile
+            - pnpm --dir .. install --frozen-lockfile
         build:
           commands:
-            - pnpm turbo run build --filter=@hms/web
+            - pnpm --dir .. turbo run build --filter=@hms/web
       artifacts:
-        baseDirectory: apps/web/.next
+        baseDirectory: .next
         files:
           - '**/*'
       cache:
         paths:
-          - node_modules/**/*
           - $HOME/.pnpm-store/**/*
-          - .turbo/**/*
-          - apps/web/.next/cache/**/*
+          - .next/cache/**/*
