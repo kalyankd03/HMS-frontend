@@ -6,16 +6,14 @@ applications:
       phases:
         preBuild:
           commands:
-            - cd ../..
             - export PNPM_HOME=$HOME/.pnpm
             - export PATH=$PNPM_HOME:$PATH
             - corepack enable
             - corepack prepare pnpm@9.15.9 --activate
-            - pnpm install --frozen-lockfile
+            - cd ../.. && pnpm install --frozen-lockfile
         build:
           commands:
-            - cd ../..
-            - pnpm turbo run build --filter=@hms/web
+            - cd ../.. && pnpm turbo run build --filter=@hms/web
       artifacts:
         baseDirectory: .next
         files:
