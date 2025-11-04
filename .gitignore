@@ -2,9 +2,11 @@
 node_modules/
 .pnp
 .pnp.js
+.pnpm-store/
 
 # Testing
 coverage/
+.vitest/
 
 # Next.js
 .next/
@@ -16,22 +18,25 @@ dist/
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*.local
+.env.production
 
 # Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
 # Runtime data
 pids
 *.pid
 *.seed
 *.pid.lock
+
+# Package manager lock files (keep pnpm-lock.yaml)
+package-lock.json
+yarn.lock
 
 # Optional npm cache directory
 .npm
@@ -51,16 +56,19 @@ pids
 # Output of 'npm pack'
 *.tgz
 
-# Yarn Integrity file
+# Yarn files
 .yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-.turbo
+# Turbo
+.turbo/
 
 # TypeScript
 *.tsbuildinfo
+next-env.d.ts
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test

@@ -845,7 +845,7 @@ const handleSaveEMR = async () => {
       </div>
       <Dialog
         open={isPauseDialogOpen}
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           if (!isPausing) {
             if (!open) {
               setPauseError(null);
