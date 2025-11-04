@@ -14,8 +14,11 @@ applications:
         build:
           commands:
             - pnpm turbo run build --filter=@hms/web
-            # Copy static assets into standalone output
-            - cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+            # Copy complete .next directory into standalone
+            - cp -r apps/web/.next apps/web/.next/standalone/apps/web/.next
+            # Remove nested standalone to avoid duplication
+            - rm -rf apps/web/.next/standalone/apps/web/.next/standalone
+            # Copy public directory
             - cp -r apps/web/public apps/web/.next/standalone/apps/web/public
       artifacts:
         baseDirectory: apps/web/.next/standalone
