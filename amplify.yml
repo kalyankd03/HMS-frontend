@@ -1,6 +1,6 @@
 version: 1
 applications:
-  - appRoot: apps/web
+  - appRoot: .
     platform: WEB_COMPUTE
     frontend:
       phases:
@@ -10,17 +10,20 @@ applications:
             - export PATH=$PNPM_HOME:$PATH
             - corepack enable
             - corepack prepare pnpm@9.15.9 --activate
-            - cd .. && pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile
         build:
           commands:
-            - cd .. && pnpm turbo run build --filter=@hms/web
+            - pnpm turbo run build --filter=@hms/web
+            # Create a package.json for the standalone server
+            - cd apps/web/.next/standalone && echo '{"type":"commonjs"}' > package.json
       artifacts:
-        baseDirectory: .next
+        baseDirectory: apps/web/.next/standalone
         files:
           - '**/*'
       cache:
         paths:
-          - ../node_modules/**/*
+          - node_modules/**/*
           - $HOME/.pnpm-store/**/*
-          - ../.turbo/**/*
-          - .next/cache/**/*
+          - .turbo/**/*
+          - apps/web/.next/cache/**/*
+    buildCommand: cd apps/web && node server.js
