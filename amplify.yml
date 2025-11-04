@@ -17,10 +17,8 @@ applications:
           commands:
             # Build the web app from monorepo root
             - cd ../.. && pnpm turbo run build --filter=@hms/web
-            # Copy build artifacts back to appRoot for Amplify
-            - cd ../.. && cp -r apps/web/.next $AMPLIFY_WORKING_DIR/
       artifacts:
-        baseDirectory: .next
+        baseDirectory: ../../apps/web/.next
         files:
           - '**/*'
       cache:
